@@ -4,7 +4,7 @@ import joblib
 import pandas as pd
 
 # Load the trained model and test data
-best_model = joblib.load('xgboost_best_model.pkl')  # Load the saved model
+best_model = joblib.load('lightgbm_best_model.pkl')  # Load the saved model
 X_test = pd.read_csv('X_test.csv')  # Load your test data
 
 # 1. Create the Explainer

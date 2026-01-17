@@ -188,7 +188,7 @@ st.markdown("""
 # Load the trained model
 @st.cache_resource
 def load_model():
-    return joblib.load('xgboost_best_model.pkl')
+    return joblib.load('lightgbm_best_model.pkl')
 
 model = load_model()
 
@@ -473,7 +473,7 @@ st.markdown("---")
 st.markdown("""
 <div style='text-align: center; padding: 30px; background: white; border-radius: 15px; margin-top: 30px;'>
     <h3 style='color: #1e3a8a; margin-bottom: 10px;'>🚗 Sri Lanka Vehicle Price Predictor</h3>
-    <p style='color: #6b7280; margin: 5px 0;'>Powered by XGBoost Machine Learning & Streamlit</p>
+    <p style='color: #6b7280; margin: 5px 0;'>Powered by Light GBM Machine Learning & Streamlit</p>
     <p style='color: #9ca3af; font-size: 14px; margin: 10px 0 0 0;'>
         Built with ❤️ for the Sri Lankan automotive community
     </p>

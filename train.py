@@ -5,7 +5,8 @@ import seaborn as sns
 from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_squared_error, r2_score
-from xgboost import XGBRegressor
+from lightgbm import LGBMRegressor
+import joblib
 
 # 1. Load the Cleaned Data
 df = pd.read_csv('riyasewana_cleaned.csv')
@@ -77,24 +78,25 @@ print("--- Linear Regression (Baseline) ---")
 print(f"RMSE: {np.sqrt(mean_squared_error(y_test, y_pred_lr)):,.2f}")
 print(f"R² Score: {r2_score(y_test, y_pred_lr):.4f}")
 
-# --- ADVANCED MODEL (XGBoost with GridSearchCV) ---
+# --- ADVANCED MODEL (LightGBM with GridSearchCV) ---
 # Use GridSearchCV to find the best hyperparameters automatically
-print("\n--- XGBoost with GridSearchCV (Optimizing...) ---")
+print("\n--- LightGBM with GridSearchCV (Optimizing...) ---")
 
 # Define the parameter grid to search
+# NOTE: LightGBM uses 'num_leaves' as the main complexity parameter
 param_grid = {
-    'n_estimators': [100, 500, 1000],   # How many trees
-    'learning_rate': [0.01, 0.05, 0.1], # How fast it learns
-    'max_depth': [3, 5, 7],             # Tree complexity (lower is better for small data)
-    'subsample': [0.7, 0.8, 0.9]        # Prevent overfitting
+    'n_estimators': [100, 500, 1000],    # Number of boosting rounds
+    'learning_rate': [0.01, 0.05, 0.1],  # Step size
+    'num_leaves': [20, 31, 50],          # Controls tree complexity (31 is default)
+    'subsample': [0.7, 0.8, 0.9]         # Fraction of data to use for each tree
 }
 
-# Initialize XGBoost regressor
-xgb = XGBRegressor(objective='reg:squarederror', random_state=42, verbosity=0)
+# Initialize LightGBM regressor
+lgbm = LGBMRegressor(objective='regression', random_state=42, verbose=-1)
 
 # Initialize GridSearchCV (3-fold cross-validation)
 grid_search = GridSearchCV(
-    estimator=xgb, 
+    estimator=lgbm, 
     param_grid=param_grid, 
     cv=3,  # 3-fold cross-validation
     scoring='r2',  # Optimize for R² score
@@ -110,23 +112,23 @@ print(f"Best Cross-Validation R² Score: {grid_search.best_score_:.4f}")
 
 # Use the best model for predictions
 best_model = grid_search.best_estimator_
-y_pred_xgb_log = best_model.predict(X_test)
-y_pred_xgb = np.expm1(y_pred_xgb_log)  # Convert back to original scale
+y_pred_lgbm_log = best_model.predict(X_test)
+y_pred_lgbm = np.expm1(y_pred_lgbm_log)  # Convert back to original scale
 
-print("\n--- XGBoost Best Model Results ---")
-rmse_xgb = np.sqrt(mean_squared_error(y_test, y_pred_xgb))
-r2_xgb = r2_score(y_test, y_pred_xgb)
+print("\n--- LightGBM Best Model Results ---")
+rmse_lgbm = np.sqrt(mean_squared_error(y_test, y_pred_lgbm))
+r2_lgbm = r2_score(y_test, y_pred_lgbm)
 
-print(f"RMSE: {rmse_xgb:,.2f}")
-print(f"R² Score: {r2_xgb:.4f}")
+print(f"RMSE: {rmse_lgbm:,.2f}")
+print(f"R² Score: {r2_lgbm:.4f}")
 
 # --- VISUALIZATION (For your Report) ---
 plt.figure(figsize=(10, 6))
-plt.scatter(y_test, y_pred_xgb, alpha=0.5, color='blue', label='Predicted')
+plt.scatter(y_test, y_pred_lgbm, alpha=0.5, color='green', label='Predicted')
 plt.plot([y.min(), y.max()], [y.min(), y.max()], 'r--', lw=2, label='Perfect Prediction')
 plt.xlabel("Actual Price (LKR)")
 plt.ylabel("Predicted Price (LKR)")
-plt.title(f"Actual vs Predicted Prices - XGBoost (R² = {r2_xgb:.2f})")
+plt.title(f"Actual vs Predicted Prices - LightGBM (R² = {r2_lgbm:.2f})")
 plt.legend()
 plt.grid(True)
 plt.savefig('model_performance_plot.png')
@@ -134,6 +136,5 @@ print(f"\nPlot saved as 'model_performance_plot.png'")
 plt.show()
 
 # --- SAVE THE BEST MODEL ---
-import joblib
-joblib.dump(best_model, 'xgboost_best_model.pkl')
-print(f"Best model saved as 'xgboost_best_model.pkl'")
+joblib.dump(best_model, 'lightgbm_best_model.pkl')
+print(f"Best model saved as 'lightgbm_best_model.pkl'")
